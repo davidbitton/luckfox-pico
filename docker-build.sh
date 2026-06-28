@@ -29,6 +29,7 @@ Usage: ./docker-build.sh [options] [build.sh args...]
 Options:
   --build-image   (Re)build the Docker image
   --sync          Force host → volume sync before build (macOS)
+  --sync-output   Copy volume output/ → host only (macOS; no build)
   --shell         Interactive bash in the container
   --check         Run ./build.sh check
   -h, --help      Show this help
@@ -239,6 +240,15 @@ while [[ $# -gt 0 ]]; do
     -h|--help) usage; exit 0 ;;
     --build-image) build_image; shift; [[ $# -eq 0 ]] && exit 0 ;;
     --sync) FORCE_SYNC=1; shift ;;
+    --sync-output)
+      if [[ "${USE_VOLUME}" -ne 1 ]]; then
+        echo "error: --sync-output is for macOS volume builds (Darwin)." >&2
+        echo "On Linux, output/ is already on the host bind-mount." >&2
+        exit 1
+      fi
+      sync_volume_output_to_host
+      exit 0
+      ;;
     --shell)
       shift
       if [[ "${USE_VOLUME}" -eq 1 ]]; then
